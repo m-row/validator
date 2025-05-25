@@ -315,7 +315,7 @@ func (v *Validator) AssignClock(
 }
 
 func (v *Validator) AssignUUID(
-	key, tableName string,
+	key, fieldName, tableName string,
 	property *uuid.UUID,
 	required bool,
 	allowedScopes ...string,
@@ -328,7 +328,7 @@ func (v *Validator) AssignUUID(
 			property = &prop
 		}
 		*property = *keyUUID
-		v.Exists(property, key, tableName, required)
+		v.Exists(property, key, fieldName, tableName, required)
 	}
 	return property
 }
@@ -353,13 +353,14 @@ func (v *Validator) UnmarshalInto(
 //	SELECT EXISTS(SELECT 1 FROM tableName WHERE id=$1)
 func (v *Validator) Exists(
 	id any,
-	key, tableName string,
+	key, tableField, tableName string,
 	required bool,
 ) {
 	var exists bool
 	query := fmt.Sprintf(
-		`SELECT EXISTS(SELECT 1 FROM %s WHERE id=$1)`,
+		`SELECT EXISTS(SELECT 1 FROM %s WHERE %s=$1)`,
 		tableName,
+		tableField,
 	)
 	if err := v.Conn.GetContext(
 		context.Background(),
@@ -377,7 +378,7 @@ func (v *Validator) Exists(
 // IDExistsInDB checks if the field value of an int id exists in database
 func (v *Validator) IDExistsInDB(
 	id *int,
-	key, table string,
+	key, tableField, tableName string,
 	required bool,
 ) {
 	if id == nil && required {
@@ -385,21 +386,21 @@ func (v *Validator) IDExistsInDB(
 		return
 	}
 	// only allows the check if the value in the model is not equal to the input
-	v.Exists(id, key, table, required)
+	v.Exists(id, key, tableField, tableName, required)
 }
 
 // UUIDExistsInDB checks if the field value of a uuid exists in database.
 func (v *Validator) UUIDExistsInDB(
 	id *uuid.UUID,
-	key, fieldName, table string,
+	key, tableField, tableName string,
 	required bool,
 ) {
 	if id != nil {
 		if required {
-			v.Check(false, fieldName, v.T.ValidateRequired())
+			v.Check(false, key, v.T.ValidateRequired())
 		}
 	}
-	v.Exists(id, key, table, required)
+	v.Exists(id, key, tableField, tableName, required)
 }
 
 // UserIDHasRole checks if the user id has role name associated with it
