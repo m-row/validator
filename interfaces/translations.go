@@ -51,4 +51,7 @@ type Translation interface {
 	OutOfScopeError() string
 	ProfileCleared() string
 	UnauthorizedAccess() string
+
+	OTPSentSuccessfully() string
+	WalletTransactionAlreadyConfirmed() string
 }
